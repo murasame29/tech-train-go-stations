@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"reflect"
 
 	"github.com/TechBowl-japan/go-stations/model"
 	"github.com/TechBowl-japan/go-stations/service"
@@ -38,8 +39,12 @@ func (h *TODOHandler) Read(ctx context.Context, req *model.ReadTODORequest) (*mo
 
 // Update handles the endpoint that updates the TODO.
 func (h *TODOHandler) Update(ctx context.Context, req *model.UpdateTODORequest) (*model.UpdateTODOResponse, error) {
-	_, _ = h.svc.UpdateTODO(ctx, 0, "", "")
-	return &model.UpdateTODOResponse{}, nil
+	result, err := h.svc.UpdateTODO(ctx, req.ID, req.Subject, req.Description)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.UpdateTODOResponse{TODO: *result}, nil
 }
 
 // Delete handles the endpoint that deletes the TODOs.
@@ -60,6 +65,26 @@ func (h *TODOHandler) CreateTodo(w http.ResponseWriter, r *http.Request) (http.R
 
 	response, err := h.Create(context.Background(), &request)
 	if err != nil {
+		return w, http.StatusInternalServerError, nil
+	}
+	return w, http.StatusOK, response
+}
+
+func (h *TODOHandler) UpdateTodo(w http.ResponseWriter, r *http.Request) (http.ResponseWriter, int, *model.UpdateTODOResponse) {
+	var request model.UpdateTODORequest
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		return w, http.StatusInternalServerError, nil
+	}
+
+	if request.ID == 0 || request.Subject == "" {
+		return w, http.StatusBadRequest, nil
+	}
+
+	response, err := h.Update(context.Background(), &request)
+	if err != nil {
+		if reflect.TypeOf(err) == reflect.TypeOf(model.ErrNotFound{}) {
+			return w, http.StatusNotFound, nil
+		}
 		return w, http.StatusInternalServerError, nil
 	}
 	return w, http.StatusOK, response
