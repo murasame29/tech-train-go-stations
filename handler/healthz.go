@@ -2,9 +2,11 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 
+	"github.com/TechBowl-japan/go-stations/handler/middleware"
 	"github.com/TechBowl-japan/go-stations/model"
 )
 
@@ -18,7 +20,7 @@ func NewHealthzHandler() *HealthzHandler {
 
 // ServeHTTP implements http.Handler interface.
 func (h *HealthzHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	respBody := &model.HealthzResponse{Message: "OK"}
+	respBody := &model.HealthzResponse{Message: fmt.Sprintf("OK OSname : %s", r.Context().Value(middleware.OsName).(string))}
 
 	if err := json.NewEncoder(w).Encode(respBody); err != nil {
 		log.Println("json marshal error :", err)

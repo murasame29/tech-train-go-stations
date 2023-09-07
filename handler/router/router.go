@@ -27,7 +27,7 @@ func NewRouter(todoDB *sql.DB) *http.ServeMux {
 // healthzに関するルータを定義
 func healthRouter(mux *http.ServeMux) {
 	healthz := handler.NewHealthzHandler()
-	mux.HandleFunc("/healthz", healthz.ServeHTTP)
+	mux.Handle("/healthz", middleware.GetUserAgent(http.HandlerFunc(healthz.ServeHTTP)))
 
 }
 
@@ -58,8 +58,8 @@ func todoRouter(mux *http.ServeMux, db *sql.DB) {
 }
 
 func panicRouter(mux *http.ServeMux) {
-	ph := http.HandlerFunc(handler.NewPanichandler().ServeHTTP)
-	mux.Handle("/do-panic", middleware.Recovery(ph))
+	ph := handler.NewPanichandler()
+	mux.Handle("/do-panic", middleware.Recovery(http.HandlerFunc(ph.ServeHTTP)))
 }
 
 // 任意のstatusをヘッドに入れたレスポンスを返す
