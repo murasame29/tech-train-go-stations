@@ -7,13 +7,10 @@ type (
 	CreateTODOResponse struct {
 		TODO `json:"todo"`
 	}
-
-	// A ReadTODORequest expresses ...
-	ReadTODORequest struct{}
 	// A ReadTODOResponse expresses ...
-	ReadTODOResponse struct{}
-
-	// A UpdateTODORequest expresses ...
+	ReadTODOResponse struct {
+		TODOs []TODO `json:"todos"`
+	}
 
 	// A UpdateTODOResponse expresses ...
 	UpdateTODOResponse struct {
@@ -43,4 +40,9 @@ type UpdateTODORequest struct {
 	ID          int64  `json:"id"`
 	Subject     string `json:"subject"`
 	Description string `json:"description"`
+}
+
+type ReadTODORequest struct {
+	PrevID int64 `json:"prev_id"`
+	Size   int64 `json:"size"`
 }
