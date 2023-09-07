@@ -14,9 +14,11 @@ type (
 	ReadTODOResponse struct{}
 
 	// A UpdateTODORequest expresses ...
-	UpdateTODORequest struct{}
+
 	// A UpdateTODOResponse expresses ...
-	UpdateTODOResponse struct{}
+	UpdateTODOResponse struct {
+		TODO `json:"todo"`
+	}
 
 	// A DeleteTODORequest expresses ...
 	DeleteTODORequest struct{}
@@ -33,6 +35,12 @@ type TODO struct {
 }
 
 type CreateTODORequest struct {
+	Subject     string `json:"subject"`
+	Description string `json:"description"`
+}
+
+type UpdateTODORequest struct {
+	ID          int64  `json:"id"`
 	Subject     string `json:"subject"`
 	Description string `json:"description"`
 }
