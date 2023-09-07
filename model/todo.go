@@ -17,8 +17,6 @@ type (
 		TODO `json:"todo"`
 	}
 
-	// A DeleteTODORequest expresses ...
-	DeleteTODORequest struct{}
 	// A DeleteTODOResponse expresses ...
 	DeleteTODOResponse struct{}
 )
@@ -45,4 +43,8 @@ type UpdateTODORequest struct {
 type ReadTODORequest struct {
 	PrevID int64 `json:"prev_id"`
 	Size   int64 `json:"size"`
+}
+
+type DeleteTODORequest struct {
+	IDs []int64 `json:"ids"`
 }
