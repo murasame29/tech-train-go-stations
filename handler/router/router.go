@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/TechBowl-japan/go-stations/handler"
+	"github.com/TechBowl-japan/go-stations/handler/middleware"
 	"github.com/TechBowl-japan/go-stations/service"
 )
 
@@ -15,7 +16,11 @@ func NewRouter(todoDB *sql.DB) *http.ServeMux {
 	mux := http.NewServeMux()
 	// healthzに関するルータを定義
 	healthRouter(mux)
+	// todoに関するルータを定義
 	todoRouter(mux, todoDB)
+	// panicに関するルータを定義
+	panicRouter(mux)
+
 	return mux
 }
 
@@ -50,6 +55,11 @@ func todoRouter(mux *http.ServeMux, db *sql.DB) {
 			responseJson(w, http.StatusInternalServerError, err)
 		}
 	})
+}
+
+func panicRouter(mux *http.ServeMux) {
+	ph := http.HandlerFunc(handler.NewPanichandler().ServeHTTP)
+	mux.Handle("/do-panic", middleware.Recovery(ph))
 }
 
 // 任意のstatusをヘッドに入れたレスポンスを返す
