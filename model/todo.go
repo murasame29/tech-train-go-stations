@@ -3,12 +3,10 @@ package model
 import "time"
 
 type (
-	// A TODO expresses ...
-
-	// A CreateTODORequest expresses ...
-	CreateTODORequest struct{}
 	// A CreateTODOResponse expresses ...
-	CreateTODOResponse struct{}
+	CreateTODOResponse struct {
+		TODO `json:"todo"`
+	}
 
 	// A ReadTODORequest expresses ...
 	ReadTODORequest struct{}
@@ -32,4 +30,9 @@ type TODO struct {
 	Description string    `json:"description"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
+}
+
+type CreateTODORequest struct {
+	Subject     string `json:"subject"`
+	Description string `json:"description"`
 }
