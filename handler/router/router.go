@@ -40,6 +40,7 @@ func todoRouter(mux *http.ServeMux, db *sql.DB) {
 		case http.MethodPut:
 			err = responseJson(todo.UpdateTodo(w, r))
 		case http.MethodDelete:
+			err = responseJson(todo.DeleteTodo(w, r))
 		default:
 			// TODO:エラーハンドリングする
 		}

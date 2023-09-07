@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"log"
 	"net/http"
 	"reflect"
 	"strconv"
@@ -114,10 +115,32 @@ func (h *TODOHandler) ReadTodo(w http.ResponseWriter, r *http.Request) (http.Res
 		request.Size = 5
 	}
 
-	result, err := h.svc.ReadTODO(r.Context(), request.PrevID, request.Size)
+	result, err := h.svc.ReadTODO(context.Background(), request.PrevID, request.Size)
 	if err != nil {
 		return w, http.StatusInternalServerError, nil
 	}
 
 	return w, http.StatusOK, &model.ReadTODOResponse{TODOs: result}
+}
+
+func (h *TODOHandler) DeleteTodo(w http.ResponseWriter, r *http.Request) (http.ResponseWriter, int, *model.DeleteTODOResponse) {
+	var request model.DeleteTODORequest
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		return w, http.StatusBadRequest, nil
+	}
+
+	log.Println(request.IDs)
+
+	if len(request.IDs) == 0 || request.IDs == nil {
+		return w, http.StatusBadRequest, nil
+	}
+
+	if err := h.svc.DeleteTODO(context.Background(), request.IDs); err != nil {
+		if reflect.TypeOf(err) == reflect.TypeOf(&model.ErrNotFound{}) {
+			return w, http.StatusNotFound, nil
+		}
+		return w, http.StatusInternalServerError, nil
+	}
+
+	return w, http.StatusOK, &model.DeleteTODOResponse{}
 }
