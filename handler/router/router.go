@@ -34,6 +34,7 @@ func todoRouter(mux *http.ServeMux, db *sql.DB) {
 		var err error
 		switch r.Method {
 		case http.MethodGet:
+			err = responseJson(todo.ReadTodo(w, r))
 		case http.MethodPost:
 			err = responseJson(todo.CreateTodo(w, r))
 		case http.MethodPut:
@@ -52,7 +53,6 @@ func todoRouter(mux *http.ServeMux, db *sql.DB) {
 
 // 任意のstatusをヘッドに入れたレスポンスを返す
 func responseJson(w http.ResponseWriter, status int, response interface{}) error {
-	log.Println(status)
 	w.WriteHeader(status)
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		return err

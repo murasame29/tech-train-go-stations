@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"reflect"
+	"strconv"
 
 	"github.com/TechBowl-japan/go-stations/model"
 	"github.com/TechBowl-japan/go-stations/service"
@@ -88,4 +89,35 @@ func (h *TODOHandler) UpdateTodo(w http.ResponseWriter, r *http.Request) (http.R
 		return w, http.StatusInternalServerError, nil
 	}
 	return w, http.StatusOK, response
+}
+
+func (h *TODOHandler) ReadTodo(w http.ResponseWriter, r *http.Request) (http.ResponseWriter, int, *model.ReadTODOResponse) {
+	var request model.ReadTODORequest
+	prevID := r.URL.Query().Get("prev_id")
+	size := r.URL.Query().Get("size")
+
+	if prevID != "" {
+		prev, err := strconv.Atoi(prevID)
+		if err != nil {
+			return w, http.StatusBadRequest, nil
+		}
+		request.PrevID = int64(prev)
+	}
+
+	if size != "" {
+		siz, err := strconv.Atoi(size)
+		if err != nil {
+			return w, http.StatusBadRequest, nil
+		}
+		request.Size = int64(siz)
+	} else {
+		request.Size = 5
+	}
+
+	result, err := h.svc.ReadTODO(r.Context(), request.PrevID, request.Size)
+	if err != nil {
+		return w, http.StatusInternalServerError, nil
+	}
+
+	return w, http.StatusOK, &model.ReadTODOResponse{TODOs: result}
 }
