@@ -2,6 +2,8 @@ package handler
 
 import (
 	"context"
+	"encoding/json"
+	"net/http"
 
 	"github.com/TechBowl-japan/go-stations/model"
 	"github.com/TechBowl-japan/go-stations/service"
@@ -21,8 +23,11 @@ func NewTODOHandler(svc *service.TODOService) *TODOHandler {
 
 // Create handles the endpoint that creates the TODO.
 func (h *TODOHandler) Create(ctx context.Context, req *model.CreateTODORequest) (*model.CreateTODOResponse, error) {
-	_, _ = h.svc.CreateTODO(ctx, "", "")
-	return &model.CreateTODOResponse{}, nil
+	result, err := h.svc.CreateTODO(ctx, req.Subject, req.Description)
+	if err != nil {
+		return nil, err
+	}
+	return &model.CreateTODOResponse{TODO: *result}, nil
 }
 
 // Read handles the endpoint that reads the TODOs.
@@ -41,4 +46,21 @@ func (h *TODOHandler) Update(ctx context.Context, req *model.UpdateTODORequest) 
 func (h *TODOHandler) Delete(ctx context.Context, req *model.DeleteTODORequest) (*model.DeleteTODOResponse, error) {
 	_ = h.svc.DeleteTODO(ctx, nil)
 	return &model.DeleteTODOResponse{}, nil
+}
+
+func (h *TODOHandler) CreateTodo(w http.ResponseWriter, r *http.Request) (http.ResponseWriter, int, *model.CreateTODOResponse) {
+	var request model.CreateTODORequest
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		return w, http.StatusInternalServerError, nil
+	}
+
+	if request.Subject == "" {
+		return w, http.StatusBadRequest, nil
+	}
+
+	response, err := h.Create(context.Background(), &request)
+	if err != nil {
+		return w, http.StatusInternalServerError, nil
+	}
+	return w, http.StatusOK, response
 }
