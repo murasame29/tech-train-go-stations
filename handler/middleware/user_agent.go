@@ -7,15 +7,18 @@ import (
 	"github.com/mileusna/useragent"
 )
 
-const (
-	OsName = "os_name"
-)
+type OsName struct{}
+
+func getUserAgent(userAgent string) useragent.UserAgent {
+	return useragent.Parse(userAgent)
+}
 
 func GetUserAgent(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// ユーザエージェントの取得
-		ua := useragent.Parse(r.UserAgent())
-		ctx := context.WithValue(r.Context(), OsName, ua.OS)
+		ua := getUserAgent(r.UserAgent())
+
+		ctx := context.WithValue(r.Context(), OsName{}, ua.OS)
 		h.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
