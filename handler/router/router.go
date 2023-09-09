@@ -16,19 +16,15 @@ func NewRouter(todoDB *sql.DB) *http.ServeMux {
 	mux := http.NewServeMux()
 	// healthzに関するルータを定義
 	healthRouter(mux)
-	// todoに関するルータを定義
 	todoRouter(mux, todoDB)
-	// panicに関するルータを定義
 	panicRouter(mux)
 
 	return mux
 }
 
-// healthzに関するルータを定義
 func healthRouter(mux *http.ServeMux) {
 	healthz := handler.NewHealthzHandler()
-	mux.Handle("/healthz", middleware.GetUserAgent(http.HandlerFunc(healthz.ServeHTTP)))
-
+	mux.Handle("/healthz", middleware.GetUserAgent(middleware.AccessLog(http.HandlerFunc(healthz.ServeHTTP))))
 }
 
 // todoに関するルータを定義

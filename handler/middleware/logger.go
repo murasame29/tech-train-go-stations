@@ -7,9 +7,9 @@ import (
 	"time"
 )
 
-type Log struct {
+type AccessLogger struct {
 	Timestamp time.Time `json:"timestamp"`
-	Latency   int64     `json:"latency"`
+	Latency   int64     `json:"latency(ms)"`
 	Path      string    `json:"path"`
 	OS        string    `json:"os"`
 }
@@ -19,18 +19,18 @@ func getLatency(start time.Time) int64 {
 	return int64(time.Since(start) / time.Microsecond)
 }
 
-func Logger(h http.Handler) http.Handler {
+func AccessLog(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var log Log
+		var logger AccessLogger
 
-		log.Path = r.URL.Path
-		log.Timestamp = time.Now()
-		// 最後に行われる処理
+		logger.Path = r.URL.Path
+		logger.Timestamp = time.Now()
+
 		defer func() {
-			log.OS = r.Context().Value(OsName{}).(string)
-			log.Latency = getLatency(log.Timestamp)
+			logger.OS = (r.Context()).Value(OSname).(string)
 
-			body, err := json.Marshal(log)
+			logger.Latency = getLatency(logger.Timestamp)
+			body, err := json.Marshal(logger)
 			if err != nil {
 				if rec := recover(); rec != nil {
 					w.WriteHeader(http.StatusInternalServerError)
@@ -40,5 +40,6 @@ func Logger(h http.Handler) http.Handler {
 			// 標準出力
 			fmt.Println(string(body))
 		}()
+		h.ServeHTTP(w, r)
 	})
 }
