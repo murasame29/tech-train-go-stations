@@ -11,27 +11,41 @@ import (
 	"github.com/TechBowl-japan/go-stations/service"
 )
 
-func NewRouter(todoDB *sql.DB) *http.ServeMux {
-	// register routes
-	mux := http.NewServeMux()
-	// healthzに関するルータを定義
-	healthRouter(mux)
-	todoRouter(mux, todoDB)
-	panicRouter(mux)
-
-	return mux
+type Router struct {
+	TodoDB *sql.DB
+	Mux    *http.ServeMux
 }
 
-func healthRouter(mux *http.ServeMux) {
+func NewRouter(todoDB *sql.DB) *Router {
+	// register routes
+	mux := http.NewServeMux()
+
+	router := &Router{
+		Mux:    mux,
+		TodoDB: todoDB,
+	}
+	router.healthRouter()
+	router.panicRouter()
+	router.todoRouter()
+
+	return router
+}
+
+func (r *Router) healthRouter() {
 	healthz := handler.NewHealthzHandler()
-	mux.Handle("/healthz", middleware.GetUserAgent(middleware.AccessLog(http.HandlerFunc(healthz.ServeHTTP))))
+	r.Mux.Handle("/healthz", buildChain(
+		http.HandlerFunc(healthz.ServeHTTP),
+		middleware.Recovery,
+		middleware.GetUserAgent,
+		middleware.AccessLog,
+	))
 }
 
 // todoに関するルータを定義
-func todoRouter(mux *http.ServeMux, db *sql.DB) {
-	todo := handler.NewTODOHandler(service.NewTODOService(db))
+func (r *Router) todoRouter() {
+	todo := handler.NewTODOHandler(service.NewTODOService(r.TodoDB))
 
-	mux.HandleFunc("/todos", func(w http.ResponseWriter, r *http.Request) {
+	r.Mux.Handle("/todos", buildChain(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var err error
 		switch r.Method {
 		case http.MethodGet:
@@ -50,12 +64,21 @@ func todoRouter(mux *http.ServeMux, db *sql.DB) {
 			log.Println(err)
 			responseJson(w, http.StatusInternalServerError, err)
 		}
-	})
+	}),
+		middleware.Recovery,
+		middleware.GetUserAgent,
+		middleware.AccessLog,
+	))
 }
 
-func panicRouter(mux *http.ServeMux) {
+func (r *Router) panicRouter() {
 	ph := handler.NewPanichandler()
-	mux.Handle("/do-panic", middleware.Recovery(http.HandlerFunc(ph.ServeHTTP)))
+	r.Mux.Handle("/do-panic",
+		buildChain(http.HandlerFunc(ph.ServeHTTP),
+			middleware.Recovery,
+			middleware.GetUserAgent,
+			middleware.AccessLog,
+		))
 }
 
 // 任意のstatusをヘッドに入れたレスポンスを返す
@@ -65,4 +88,11 @@ func responseJson(w http.ResponseWriter, status int, response interface{}) error
 		return err
 	}
 	return nil
+}
+
+func buildChain(h http.Handler, m ...func(http.Handler) http.Handler) http.Handler {
+	if len(m) == 0 {
+		return h
+	}
+	return m[0](buildChain(h, m[1:cap(m)]...))
 }
