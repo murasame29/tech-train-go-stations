@@ -2,10 +2,13 @@ package middleware
 
 import (
 	"encoding/base64"
+	"fmt"
 	"net/http"
 	"strings"
 
 	"github.com/TechBowl-japan/go-stations/env"
+	"github.com/TechBowl-japan/go-stations/handler/response"
+	"github.com/TechBowl-japan/go-stations/model"
 )
 
 // https://pkg.go.dev/encoding/base64
@@ -24,18 +27,18 @@ func (m *Middleware) BasicAuth(h http.Handler) http.Handler {
 		authToken := getHeader(r, AuthenticateHeaderKey)
 		// authTokenが空の場合
 		if len(authToken) == 0 { //Equal
-			// 401を返す
+			response.Unauthorized(w, model.ErrorResponse{Error: "Token cannot be empty"})
 		}
 
 		rawToken, err := base64Decode(authToken)
 		if err != nil {
-			// 返るErrorがCorruptInputErrorだから401で返す(base64のソース参照)
+			response.Unauthorized(w, model.ErrorResponse{Error: fmt.Sprintf("base64Decode Error : %s", err)})
 		}
 
 		token := strings.Split(string(rawToken), ":")
 
 		if !certification(token, m.env) {
-			// UserID or Passwordの不一致 401
+			response.Unauthorized(w, model.ErrorResponse{Error: "Wrong userId or password"})
 		}
 
 		h.ServeHTTP(w, r)

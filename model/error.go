@@ -7,3 +7,7 @@ type ErrNotFound struct {
 func (err *ErrNotFound) Error() string {
 	return err.Err
 }
+
+type ErrorResponse struct {
+	Error string `json:"error"`
+}

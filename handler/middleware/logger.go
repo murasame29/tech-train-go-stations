@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"time"
+
+	"github.com/TechBowl-japan/go-stations/handler/response"
 )
 
 type AccessLogger struct {
@@ -31,10 +33,7 @@ func (m *Middleware) AccessLog(h http.Handler) http.Handler {
 			logger.Latency = getLatency(logger.Timestamp)
 			body, err := json.Marshal(logger)
 			if err != nil {
-				if rec := recover(); rec != nil {
-					w.WriteHeader(http.StatusInternalServerError)
-					json.NewEncoder(w).Encode(nil)
-				}
+				response.InternalServerError(w, err)
 			}
 			// 標準出力
 			fmt.Println(string(body))
