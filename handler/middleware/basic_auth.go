@@ -28,17 +28,20 @@ func (m *Middleware) BasicAuth(h http.Handler) http.Handler {
 		// authTokenが空の場合
 		if len(authToken) == 0 { //Equal
 			response.Unauthorized(w, model.ErrorResponse{Error: "Token cannot be empty"})
+			return
 		}
 
 		rawToken, err := base64Decode(authToken)
 		if err != nil {
 			response.Unauthorized(w, model.ErrorResponse{Error: fmt.Sprintf("base64Decode Error : %s", err)})
+			return
 		}
 
 		token := strings.Split(string(rawToken), ":")
 
 		if !certification(token, m.env) {
 			response.Unauthorized(w, model.ErrorResponse{Error: "Wrong userId or password"})
+			return
 		}
 
 		h.ServeHTTP(w, r)

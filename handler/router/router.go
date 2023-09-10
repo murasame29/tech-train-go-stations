@@ -41,6 +41,7 @@ func (r *Router) healthRouter() {
 		r.middleware.Recovery,
 		r.middleware.GetUserAgent,
 		r.middleware.AccessLog,
+		r.middleware.BasicAuth,
 	))
 }
 
@@ -71,6 +72,7 @@ func (r *Router) todoRouter() {
 		r.middleware.Recovery,
 		r.middleware.GetUserAgent,
 		r.middleware.AccessLog,
+		r.middleware.BasicAuth,
 	))
 }
 
@@ -81,6 +83,7 @@ func (r *Router) panicRouter() {
 			r.middleware.Recovery,
 			r.middleware.GetUserAgent,
 			r.middleware.AccessLog,
+			r.middleware.BasicAuth,
 		))
 }
 

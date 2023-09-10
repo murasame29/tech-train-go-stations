@@ -12,6 +12,7 @@ func (m *Middleware) Recovery(h http.Handler) http.Handler {
 		defer func() {
 			if rec := recover(); rec != nil {
 				response.InternalServerError(w, nil)
+				return
 			}
 		}()
 		h.ServeHTTP(w, r)
