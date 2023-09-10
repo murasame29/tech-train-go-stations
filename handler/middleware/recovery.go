@@ -5,8 +5,9 @@ import (
 	"net/http"
 )
 
+// tips : 多重入れ子構造は可読性を損なう可能性あり
 func Recovery(h http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	fn := func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if rec := recover(); rec != nil {
 				w.WriteHeader(http.StatusInternalServerError)
@@ -14,5 +15,6 @@ func Recovery(h http.Handler) http.Handler {
 			}
 		}()
 		h.ServeHTTP(w, r)
-	})
+	}
+	return http.HandlerFunc(fn)
 }
