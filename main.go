@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/TechBowl-japan/go-stations/db"
+	"github.com/TechBowl-japan/go-stations/env"
 	"github.com/TechBowl-japan/go-stations/handler/router"
 )
 
@@ -48,8 +49,10 @@ func realMain() error {
 	}
 	defer todoDB.Close()
 
+	env := env.GetEnv()
+
 	// NOTE: 新しいエンドポイントの登録はrouter.NewRouterの内部で行うようにする
-	router := router.NewRouter(todoDB)
+	router := router.NewRouter(todoDB, env)
 	if err := http.ListenAndServe(defaultPort, router.Mux); err != nil {
 		return err
 	}

@@ -19,7 +19,7 @@ func getLatency(start time.Time) int64 {
 	return int64(time.Since(start) / time.Microsecond)
 }
 
-func AccessLog(h http.Handler) http.Handler {
+func (m *Middleware) AccessLog(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var logger AccessLogger
 

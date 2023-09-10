@@ -13,7 +13,7 @@ func getUserAgent(userAgent string) useragent.UserAgent {
 	return useragent.Parse(userAgent)
 }
 
-func GetUserAgent(h http.Handler) http.Handler {
+func (m *Middleware) GetUserAgent(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// ユーザエージェントの取得
 		ua := getUserAgent(r.UserAgent())

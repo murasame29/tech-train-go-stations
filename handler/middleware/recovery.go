@@ -6,7 +6,7 @@ import (
 )
 
 // tips : 多重入れ子構造は可読性を損なう可能性あり
-func Recovery(h http.Handler) http.Handler {
+func (m *Middleware) Recovery(h http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if rec := recover(); rec != nil {

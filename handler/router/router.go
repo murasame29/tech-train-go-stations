@@ -2,27 +2,30 @@ package router
 
 import (
 	"database/sql"
-	"encoding/json"
 	"log"
 	"net/http"
 
+	"github.com/TechBowl-japan/go-stations/env"
 	"github.com/TechBowl-japan/go-stations/handler"
 	"github.com/TechBowl-japan/go-stations/handler/middleware"
+	"github.com/TechBowl-japan/go-stations/handler/response"
 	"github.com/TechBowl-japan/go-stations/service"
 )
 
 type Router struct {
-	TodoDB *sql.DB
-	Mux    *http.ServeMux
+	TodoDB     *sql.DB
+	middleware *middleware.Middleware
+	Mux        *http.ServeMux
 }
 
-func NewRouter(todoDB *sql.DB) *Router {
+func NewRouter(todoDB *sql.DB, env *env.Env) *Router {
 	// register routes
 	mux := http.NewServeMux()
 
 	router := &Router{
-		Mux:    mux,
-		TodoDB: todoDB,
+		Mux:        mux,
+		middleware: middleware.NewMiddleware(env),
+		TodoDB:     todoDB,
 	}
 	router.healthRouter()
 	router.panicRouter()
@@ -35,9 +38,9 @@ func (r *Router) healthRouter() {
 	healthz := handler.NewHealthzHandler()
 	r.Mux.Handle("/healthz", buildChain(
 		http.HandlerFunc(healthz.ServeHTTP),
-		middleware.Recovery,
-		middleware.GetUserAgent,
-		middleware.AccessLog,
+		r.middleware.Recovery,
+		r.middleware.GetUserAgent,
+		r.middleware.AccessLog,
 	))
 }
 
@@ -49,25 +52,25 @@ func (r *Router) todoRouter() {
 		var err error
 		switch r.Method {
 		case http.MethodGet:
-			err = responseJson(todo.ReadTodo(w, r))
+			err = response.ResponseJson(todo.ReadTodo(w, r))
 		case http.MethodPost:
-			err = responseJson(todo.CreateTodo(w, r))
+			err = response.ResponseJson(todo.CreateTodo(w, r))
 		case http.MethodPut:
-			err = responseJson(todo.UpdateTodo(w, r))
+			err = response.ResponseJson(todo.UpdateTodo(w, r))
 		case http.MethodDelete:
-			err = responseJson(todo.DeleteTodo(w, r))
+			err = response.ResponseJson(todo.DeleteTodo(w, r))
 		default:
 			// TODO:エラーハンドリングする
 		}
 		//エラーがあった場合ログ出力して500を返す
 		if err != nil {
 			log.Println(err)
-			responseJson(w, http.StatusInternalServerError, err)
+			response.ResponseJson(w, http.StatusInternalServerError, err)
 		}
 	}),
-		middleware.Recovery,
-		middleware.GetUserAgent,
-		middleware.AccessLog,
+		r.middleware.Recovery,
+		r.middleware.GetUserAgent,
+		r.middleware.AccessLog,
 	))
 }
 
@@ -75,19 +78,10 @@ func (r *Router) panicRouter() {
 	ph := handler.NewPanichandler()
 	r.Mux.Handle("/do-panic",
 		buildChain(http.HandlerFunc(ph.ServeHTTP),
-			middleware.Recovery,
-			middleware.GetUserAgent,
-			middleware.AccessLog,
+			r.middleware.Recovery,
+			r.middleware.GetUserAgent,
+			r.middleware.AccessLog,
 		))
-}
-
-// 任意のstatusをヘッドに入れたレスポンスを返す
-func responseJson(w http.ResponseWriter, status int, response interface{}) error {
-	w.WriteHeader(status)
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		return err
-	}
-	return nil
 }
 
 func buildChain(h http.Handler, m ...func(http.Handler) http.Handler) http.Handler {
