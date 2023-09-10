@@ -25,10 +25,9 @@ func AccessLog(h http.Handler) http.Handler {
 
 		logger.Path = r.URL.Path
 		logger.Timestamp = time.Now()
+		logger.OS = (r.Context()).Value(OsName{}).(string)
 
 		defer func() {
-			logger.OS = (r.Context()).Value(OSname).(string)
-
 			logger.Latency = getLatency(logger.Timestamp)
 			body, err := json.Marshal(logger)
 			if err != nil {
