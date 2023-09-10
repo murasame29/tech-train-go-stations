@@ -15,7 +15,7 @@ type Env struct {
 	Password string
 }
 
-func LoadEnv() *Env {
+func GetEnv() *Env {
 	userId := os.Getenv(USER_ID)
 	if userId == "" {
 		log.Fatalf("env error: %s cannot be empty", USER_ID)
