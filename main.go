@@ -49,7 +49,10 @@ func realMain() error {
 	}
 	defer todoDB.Close()
 
-	env := env.GetEnv()
+	env, err := env.GetEnv()
+	if err != nil {
+		return err
+	}
 
 	// NOTE: 新しいエンドポイントの登録はrouter.NewRouterの内部で行うようにする
 	router := router.NewRouter(todoDB, env)

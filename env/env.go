@@ -1,7 +1,7 @@
 package env
 
 import (
-	"log"
+	"fmt"
 	"os"
 )
 
@@ -15,18 +15,26 @@ type Env struct {
 	Password string
 }
 
-func GetEnv() *Env {
+func GetEnv() (*Env, error) {
 	userId := os.Getenv(USER_ID)
 	if userId == "" {
-		log.Fatalf("env error: %s cannot be empty", USER_ID)
+		return nil, &EnvError{EnvName: USER_ID}
 	}
 	pass := os.Getenv(PASSWORD)
 	if pass == "" {
-		log.Fatalf("env error: %s cannot be empty", PASSWORD)
+		return nil, &EnvError{EnvName: PASSWORD}
 	}
 
 	return &Env{
 		UserID:   userId,
 		Password: pass,
-	}
+	}, nil
+}
+
+type EnvError struct {
+	EnvName string
+}
+
+func (err *EnvError) Error() string {
+	return fmt.Sprintf("env error: %s cannot be empty", err.EnvName)
 }
