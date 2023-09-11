@@ -42,22 +42,21 @@ func TestBasicAuth(t *testing.T) {
 			expectedStatus: http.StatusOK,
 		},
 	}
-	// テストケースを回す
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			// テストケースの設定
+
 			req, err := http.NewRequest(http.MethodGet, "/healthz", nil)
 			if err != nil {
 				t.Fatal(err)
 			}
 			req.Header.Set("Authorization", tc.authToken)
-			// テスト対象の関数を呼び出す
+
 			rr := httptest.NewRecorder()
 			m := NewMiddleware(&env.Env{UserID: "test", Password: "test"})
 			m.BasicAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(http.StatusOK)
 			})).ServeHTTP(rr, req)
-			// テスト結果の評価
+
 			if rr.Code != tc.expectedStatus {
 				t.Errorf("expected: %d, actual: %d", tc.expectedStatus, rr.Code)
 			}
