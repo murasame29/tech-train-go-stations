@@ -78,10 +78,12 @@ func realMain() error {
 		if err := srv.Shutdown(context.Background()); err != nil {
 			return err
 		}
+		// シャットダウンされたときにチャネルを閉じる
 		close(idleConnsClosed)
 		return nil
 	}()
 
+	// サーバを起動する
 	go func() error {
 		log.Println("starting server ...")
 		if err := srv.ListenAndServe(); err != nil {
@@ -90,6 +92,7 @@ func realMain() error {
 		return nil
 	}()
 
+	// チャネルが閉じられるまで待つ
 	<-idleConnsClosed
 
 	return nil
