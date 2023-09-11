@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/TechBowl-japan/go-stations/env"
 	"github.com/TechBowl-japan/go-stations/handler"
@@ -30,8 +31,14 @@ func NewRouter(todoDB *sql.DB, env *env.Env) *Router {
 	router.healthRouter()
 	router.panicRouter()
 	router.todoRouter()
+	router.sleepRouter()
 
 	return router
+}
+func (r *Router) sleepRouter() {
+	r.Mux.HandleFunc("/sleep", func(w http.ResponseWriter, r *http.Request) {
+		time.Sleep(10 * time.Second)
+	})
 }
 
 func (r *Router) healthRouter() {
