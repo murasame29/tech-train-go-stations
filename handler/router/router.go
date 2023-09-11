@@ -41,7 +41,6 @@ func (r *Router) healthRouter() {
 		r.middleware.Recovery,
 		r.middleware.GetUserAgent,
 		r.middleware.AccessLog,
-		r.middleware.BasicAuth,
 	))
 }
 

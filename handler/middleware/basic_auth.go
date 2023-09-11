@@ -22,6 +22,11 @@ const (
 	PASSWORD
 )
 
+const (
+	AuthType = iota
+	AuthValue
+)
+
 func (m *Middleware) BasicAuth(h http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		authToken := getHeader(r, AuthenticateHeaderKey)
@@ -31,7 +36,7 @@ func (m *Middleware) BasicAuth(h http.Handler) http.Handler {
 			return
 		}
 
-		rawToken, err := base64Decode(authToken)
+		rawToken, err := base64Decode(strings.Split(authToken, " ")[AuthValue])
 		if err != nil {
 			response.Unauthorized(w, model.ErrorResponse{Error: fmt.Sprintf("base64Decode Error : %s", err)})
 			return

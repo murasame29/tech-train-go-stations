@@ -18,22 +18,27 @@ func TestBasicAuth(t *testing.T) {
 	}{
 		{
 			name:           "authTokenが空の場合",
-			authToken:      "",
+			authToken:      "Basic ",
 			expectedStatus: http.StatusUnauthorized,
 		},
 		{
 			name:           "authTokenがbase64でdecodeできない場合",
-			authToken:      "test",
+			authToken:      "Basic test",
+			expectedStatus: http.StatusUnauthorized,
+		},
+		{
+			name:           "authTokenにuserIDのみ設定されている場合",
+			authToken:      "Basic dGVzdDo=",
+			expectedStatus: http.StatusUnauthorized,
+		},
+		{
+			name:           "authTokenにpasswordのみ設定されている場合",
+			authToken:      "Basic OnRlc3Q=",
 			expectedStatus: http.StatusUnauthorized,
 		},
 		{
 			name:           "authTokenがbase64でdecodeできる場合",
-			authToken:      "dGVzdDp0ZXN0",
-			expectedStatus: http.StatusOK,
-		},
-		{
-			name:           "authTokenがbase64でdecodeできる場合",
-			authToken:      "dGVzdDp0ZXN0",
+			authToken:      "Basic dGVzdDp0ZXN0",
 			expectedStatus: http.StatusOK,
 		},
 	}
