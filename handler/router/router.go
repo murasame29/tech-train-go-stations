@@ -38,6 +38,7 @@ func NewRouter(todoDB *sql.DB, env *env.Env) *Router {
 func (r *Router) sleepRouter() {
 	r.Mux.HandleFunc("/sleep", func(w http.ResponseWriter, r *http.Request) {
 		time.Sleep(10 * time.Second)
+		response.StatusOK(w, nil)
 	})
 }
 
