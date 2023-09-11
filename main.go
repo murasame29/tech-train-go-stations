@@ -29,6 +29,9 @@ func realMain() error {
 		defaultDBPath = ".sqlite3/todo.db"
 	)
 
+	notifyCtx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGINT, syscall.SIGTERM, os.Kill)
+	defer stop()
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = defaultPort
@@ -66,9 +69,7 @@ func realMain() error {
 	// 安全なシャットダウン https://pkg.go.dev/net/http#Server.Shutdown
 	idleConnsClosed := make(chan struct{})
 	go func() error {
-		quit := make(chan os.Signal, 1)
-		signal.Notify(quit, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
-		<-quit
+		<-notifyCtx.Done()
 		log.Println("shutdown server")
 
 		// タイムアウト設定
