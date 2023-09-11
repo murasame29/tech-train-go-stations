@@ -78,6 +78,7 @@ func realMain() error {
 		if err := srv.Shutdown(context.Background()); err != nil {
 			return err
 		}
+		close(idleConnsClosed)
 		return nil
 	}()
 
