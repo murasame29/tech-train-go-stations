@@ -63,6 +63,24 @@ func realMain() error {
 		Handler: router.NewRouter(todoDB, env).Mux,
 	}
 
+	// 安全なシャットダウン https://pkg.go.dev/net/http#Server.Shutdown
+	idleConnsClosed := make(chan struct{})
+	go func() error {
+		quit := make(chan os.Signal, 1)
+		signal.Notify(quit, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+		<-quit
+		log.Println("shutdown server")
+
+		// タイムアウト設定
+		// ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		// defer cancel()
+
+		if err := srv.Shutdown(context.Background()); err != nil {
+			return err
+		}
+		return nil
+	}()
+
 	go func() error {
 		log.Println("starting server ...")
 		if err := srv.ListenAndServe(); err != nil {
@@ -71,16 +89,7 @@ func realMain() error {
 		return nil
 	}()
 
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
-	log.Println("shutdown server")
+	<-idleConnsClosed
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	if err := srv.Shutdown(ctx); err != nil {
-		return err
-	}
 	return nil
 }
