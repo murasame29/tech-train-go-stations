@@ -76,6 +76,7 @@ func realMain() error {
 		// defer cancel()
 
 		if err := srv.Shutdown(context.Background()); err != nil {
+			close(idleConnsClosed)
 			return err
 		}
 		// シャットダウンされたときにチャネルを閉じる
