@@ -66,7 +66,7 @@ func realMain() error {
 		Handler: router.NewRouter(todoDB, env).Mux,
 	}
 
-	// 安全なシャットダウン https://pkg.go.dev/net/http#Server.Shutdown
+	// Graceful Shutdown https://pkg.go.dev/net/http#Server.Shutdown
 	idleConnsClosed := make(chan struct{})
 	go func() error {
 		<-notifyCtx.Done()
