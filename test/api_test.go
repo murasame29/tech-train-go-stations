@@ -64,17 +64,19 @@ func TestAPI(t *testing.T) {
 	defer srv.Close()
 
 	testCases := []struct {
-		name          string
-		setAuthToken  func(*http.Request)
-		createRequest func() (*http.Request, error)
-		checkResponse func(*testing.T, *http.Response) error
+		name           string
+		wantStatusCode int
+		setAuthToken   func(*http.Request)
+		createRequest  func() (*http.Request, error)
+		checkResponse  func(*http.Response) error
 	}{
 		{
-			name: "healthz",
+			name:           "healthz",
+			wantStatusCode: http.StatusOK,
 			createRequest: func() (*http.Request, error) {
 				return http.NewRequest(http.MethodGet, srv.URL+"/healthz", nil)
 			},
-			checkResponse: func(t *testing.T, resp *http.Response) error {
+			checkResponse: func(resp *http.Response) error {
 				want := "{\"message\":\"OK\"}\n"
 				got, err := io.ReadAll(resp.Body)
 				if err != nil {
@@ -88,14 +90,15 @@ func TestAPI(t *testing.T) {
 			},
 		},
 		{
-			name: "todo_success",
+			name:           "todo_success",
+			wantStatusCode: http.StatusOK,
 			setAuthToken: func(req *http.Request) {
 				req.Header.Set("Authorization", "Basic "+base64NewEncoder(testUserID+":"+testPassword))
 			},
 			createRequest: func() (*http.Request, error) {
 				return http.NewRequest(http.MethodGet, srv.URL+"/todos", nil)
 			},
-			checkResponse: func(t *testing.T, resp *http.Response) error {
+			checkResponse: func(resp *http.Response) error {
 				want := "{\"todos\":[]}\n"
 				got, err := io.ReadAll(resp.Body)
 				if err != nil {
@@ -109,14 +112,15 @@ func TestAPI(t *testing.T) {
 			},
 		},
 		{
-			name: "todo_fail_InvalidToken",
+			name:           "todo_fail_InvalidToken",
+			wantStatusCode: http.StatusUnauthorized,
 			setAuthToken: func(req *http.Request) {
 				req.Header.Set("Authorization", "Basic "+base64NewEncoder(testUserID+":"))
 			},
 			createRequest: func() (*http.Request, error) {
 				return http.NewRequest(http.MethodGet, srv.URL+"/todos", nil)
 			},
-			checkResponse: func(t *testing.T, resp *http.Response) error {
+			checkResponse: func(resp *http.Response) error {
 				want := "{\"error\":\"Wrong userId or password\"}\n"
 				got, err := io.ReadAll(resp.Body)
 				if err != nil {
@@ -130,12 +134,13 @@ func TestAPI(t *testing.T) {
 			},
 		},
 		{
-			name:         "todo_fail_EmptyToken",
-			setAuthToken: func(req *http.Request) {},
+			name:           "todo_fail_EmptyToken",
+			wantStatusCode: http.StatusUnauthorized,
+			setAuthToken:   func(req *http.Request) {},
 			createRequest: func() (*http.Request, error) {
 				return http.NewRequest(http.MethodGet, srv.URL+"/todos", nil)
 			},
-			checkResponse: func(t *testing.T, resp *http.Response) error {
+			checkResponse: func(resp *http.Response) error {
 				want := "{\"error\":\"Token cannot be empty\"}\n"
 				got, err := io.ReadAll(resp.Body)
 				if err != nil {
@@ -168,7 +173,12 @@ func TestAPI(t *testing.T) {
 			}
 			defer resp.Body.Close()
 
-			if err := tc.checkResponse(t, resp); err != nil {
+			if resp.StatusCode != tc.wantStatusCode {
+				t.Errorf("ステータスコードが一致しません got=%d want=%d", resp.StatusCode, tc.wantStatusCode)
+				return
+			}
+
+			if err := tc.checkResponse(resp); err != nil {
 				t.Errorf("レスポンスのチェックに失敗しました: %v", err)
 				return
 			}
