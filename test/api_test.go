@@ -42,16 +42,19 @@ func TestAPI(t *testing.T) {
 			return
 		}
 	})
+	// t.setEnvを使うとよい
+	t.Setenv("BASIC_AUTH_USER_ID", testUserID)
+	t.Setenv("BASIC_AUTH_PASSWORD", testPassword)
 
-	if err := os.Setenv("BASIC_AUTH_USER_ID", testUserID); err != nil {
-		t.Errorf("テスト用の環境変数のセットに失敗しました: %v", err)
-		return
-	}
+	// if err := os.Setenv("BASIC_AUTH_USER_ID", testUserID); err != nil {
+	// 	t.Errorf("テスト用の環境変数のセットに失敗しました: %v", err)
+	// 	return
+	// }
 
-	if err := os.Setenv("BASIC_AUTH_PASSWORD", testPassword); err != nil {
-		t.Errorf("テスト用の環境変数のセットに失敗しました: %v", err)
-		return
-	}
+	// if err := os.Setenv("BASIC_AUTH_PASSWORD", testPassword); err != nil {
+	// 	t.Errorf("テスト用の環境変数のセットに失敗しました: %v", err)
+	// 	return
+	// }
 
 	env, err := env.GetEnv()
 	if err != nil {
@@ -136,14 +139,15 @@ func TestAPI(t *testing.T) {
 				return http.NewRequest(http.MethodGet, srv.URL+"/todos", nil)
 			},
 			checkResponse: func(t *testing.T, resp *http.Response) error {
-				want := "{\"error\":\"Token cannot be empty\"}\n"
+				want := "{\"error\":\"UnAuthorized\"}\n"
 				got, err := io.ReadAll(resp.Body)
+
 				if err != nil {
 					return err
 				}
 
 				if string(got) != want {
-					return fmt.Errorf("レスポンスの内容が正しくありません。want: %s, got: %s", want, string(got))
+					return fmt.Errorf("レスポンスの内容が正しくありません。want: %s got: %s", want, string(got))
 				}
 				return nil
 			},

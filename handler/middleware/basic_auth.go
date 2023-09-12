@@ -14,7 +14,7 @@ func (m *Middleware) BasicAuth(h http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		userID, password, ok := r.BasicAuth()
 		if !ok {
-			response.Unauthorized(w, nil)
+			response.Unauthorized(w, model.ErrorResponse{Error: "UnAuthorized"})
 			return
 		}
 
